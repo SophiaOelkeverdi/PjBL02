@@ -51,7 +51,58 @@ print('Linhas válidas:', dados.count())
 q1 = dados.\
   filter(lambda x: x[0] == 'Brazil').\
   count()
- 
 salvar('q01', '1. Número de transações envolvendo o Brasil (RDD):', q1)
+
+q2 = dados.\
+  filter(lambda x: x[0] == 'Brazil').\
+  map(lambda x: (x[0], 1)).\
+  reduceByKey(lambda a, b: a + b).\
+  collect()
+salvar('q02', '2. Número de transações envolvendo o Brasil utilizando PairRDD.', q2)
+
+q3 = dados.\
+  filter(lambda x: x[0] == 'Brazil').\
+  filter(lambda x: int(x[1]) == 2016).\
+  count()
+salvar('q03', '3. Número de transações envolvendo o Brasil utilizando PairRDD.', q3)
+
+q4 = dados.\
+  filter(lambda x: x[0] == 'Brazil').\
+  filter(lambda x: int(x[0]), 1).\
+  map(lambda x: (x[0], int(x[1]), 1)).\
+  reduceByKey(lambda a, b: a + b).\
+  collect()
+
+salvar('q04', '4. Número de transações envolvendo o Brasil utilizando PairRDD.', q4)
+
+q5 = dados.\
+
+
+salvar('q05', '5. Número de transações envolvendo o Brasil utilizando PairRDD.', q5)
+
+q6 = dados.\
+
+
+salvar('q06', '6. Número de transações envolvendo o Brasil utilizando PairRDD.', q6)
+
+q7 = dados.\
+
+
+salvar('q07', '7. Número de transações envolvendo o Brasil utilizando PairRDD.', q7)
+
+q8 = dados.\
+
+
+salvar('q08', '8. Número de transações envolvendo o Brasil utilizando PairRDD.', q8)
+
+q9 = dados.\
+
+
+salvar('q09', '9. Número de transações envolvendo o Brasil utilizando PairRDD.', q9)
+
+q10 = dados.\
+
+
+salvar('q10', '10. Número de transações envolvendo o Brasil utilizando PairRDD.', q10)
 
 spark.stop()
