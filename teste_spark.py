@@ -6,8 +6,9 @@ os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 import pyspark
+from pyspark import StorageLevel
 from pyspark.sql import SparkSession
-from pyspark import SparkFiles
+from pyspark.sql import functions as F
 
 # Cria a sessão do Spark rodando local, usando todos os núcleos do PC
 spark = (
@@ -20,29 +21,37 @@ spark = (
 sc = spark.sparkContext
 sc.setLogLevel("ERROR")  # esconde os avisos que poluem o terminal
 
-
-# Troque pelo caminho do seu arquivo (use / mesmo no Windows)
 url = "dados/operacoes_comerciais_inteira.csv"
 
 os.makedirs('Resultados', exist_ok=True)
 
-rdd = sc.textFile(CAMINHO)
+def salvar(nome_arquivo, titulo, resultado):
+    texto = f'{titulo}\n{resultado}\n'
+    print(texto)
+    with open(f'resultados/{nome_arquivo}.txt', 'w', encoding='utf-8') as arq:
+        arq.write(texto)
+
+rdd = sc.textFile(url)
 
 cabecalho = rdd.first()
-dados = rdd.filter(lambda linha: linha != cabecalho)
 
-pares = dados.map(lambda linha: (linha.split(",")[2], 1))
-contagem = pares.reduceByKey(lambda a, b: a + b)
-print(contagem)
+# tira a linha do cabecalho e deixa as outras
+rdd = rdd.\
+  filter(lambda x: x != cabecalho)
 
-for 'Brasil', total in contagem.collect():
-    print(pais, total)
+dados = rdd.\
+  map(lambda x: x.split(';')).\
+  filter(lambda x: len(x) == 10).\
+  filter(lambda x: x[0].strip() != '' and x[4].strip() != '' and x[9].strip() != '').\
+  filter(lambda x: x[1].strip().isdigit())
 
+dados.persist(StorageLevel.MEMORY_AND_DISK)
+print('Linhas válidas:', dados.count())
 
-print("Primeiras 3 linhas:")
-for linha in rdd.take(3):
-    print("  ", linha)
-
-print("Total de linhas (com cabeçalho):", rdd.count())
+q1 = dados.\
+  filter(lambda x: x[0] == 'Brazil').\
+  count()
+ 
+salvar('q01', '1. Número de transações envolvendo o Brasil (RDD):', q1)
 
 spark.stop()
