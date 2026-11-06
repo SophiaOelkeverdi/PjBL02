@@ -13,3 +13,11 @@ PjBL02_Spark/
 ├── .gitignore
 └── README.md
 ```
+
+## O que colocar no gitgnore
+```
+dados/
+*.csv
+.venv/
+__pycache__/
+```
