@@ -147,4 +147,22 @@ salvar(
     q7,
 )
 
+q8 = (
+    dados.sortBy(lambda x: x[0])
+    .map(
+        lambda x: (
+            (int(x[1]), x[9].strip().upper()),
+            (float(x[5]), float(x[5])),
+        )
+    )
+    .reduceByKey(lambda a, b: (max(a[0], b[0]), min(a[1], b[1])))
+    .sortByKey()
+    .collect()
+)
+salvar(
+    "q08",
+    "8. Preço máximo e mínimo por categoria e por ano (PairRDD):",
+    q8,
+)
+
 spark.stop()

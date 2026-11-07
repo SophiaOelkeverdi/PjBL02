@@ -1,0 +1,2 @@
+7. Média da coluna Price para o ano de 2016 utilizando PairRDD:
+[(2016, 137984606.1966806)]
