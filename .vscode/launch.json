@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PySpark: arquivo atual",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${fileDirname}",
+      "justMyCode": true,
+      "env": {
+        "JAVA_HOME": "/usr/lib/jvm/java-21-openjdk",
+        "SPARK_HOME": "/usr/lib/spark",
+        "PYTHONPATH": "/usr/lib/spark/python:/usr/lib/spark/python/lib/py4j-0.10.9.9-src.zip"
+      }
+    },
+    {
+      "name": "PySpark: pjBL2",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/pjBL2.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true,
+      "env": {
+        "JAVA_HOME": "/usr/lib/jvm/java-21-openjdk",
+        "SPARK_HOME": "/usr/lib/spark",
+        "PYTHONPATH": "/usr/lib/spark/python:/usr/lib/spark/python/lib/py4j-0.10.9.9-src.zip"
+      }
+    }
+  ]
+}

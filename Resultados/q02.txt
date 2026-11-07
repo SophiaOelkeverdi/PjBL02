@@ -1,0 +1,2 @@
+2. Número de transações envolvendo o Brasil utilizando PairRDD:
+[('Brazil', 184748)]

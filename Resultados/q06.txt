@@ -1,0 +1,4 @@
+Média do valor das transações em 2016:
+Valor total: 39947923340001.0
+Quantidade de transações: 289510
+Média: 137984606.20

@@ -1,9 +1,18 @@
 import os
 import sys
+from pathlib import Path
 
-os.environ["JAVA_HOME"] = r"C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot"
+ROOT = Path(__file__).resolve().parent
+os.chdir(ROOT)
+
+os.environ.setdefault("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk")
+os.environ.setdefault("SPARK_HOME", "/usr/lib/spark")
 os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+
+_spark_home = os.environ["SPARK_HOME"]
+sys.path.insert(0, os.path.join(_spark_home, "python"))
+sys.path.insert(0, os.path.join(_spark_home, "python", "lib", "py4j-0.10.9.9-src.zip"))
 
 import pyspark
 from pyspark import StorageLevel
@@ -28,7 +37,7 @@ os.makedirs('Resultados', exist_ok=True)
 def salvar(nome_arquivo, titulo, resultado):
     texto = f'{titulo}\n{resultado}\n'
     print(texto)
-    with open(f'resultados/{nome_arquivo}.txt', 'w', encoding='utf-8') as arq:
+    with open(f'Resultados/{nome_arquivo}.txt', 'w', encoding='utf-8') as arq:
         arq.write(texto)
 
 rdd = sc.textFile(url)
@@ -75,34 +84,6 @@ q4 = dados.\
 
 salvar('q04', '4. Número de transações envolvendo o Brasil utilizando PairRDD.', q4)
 
-q5 = dados.\
-
-
-salvar('q05', '5. Número de transações envolvendo o Brasil utilizando PairRDD.', q5)
-
-q6 = dados.\
-
-
-salvar('q06', '6. Número de transações envolvendo o Brasil utilizando PairRDD.', q6)
-
-q7 = dados.\
-
-
-salvar('q07', '7. Número de transações envolvendo o Brasil utilizando PairRDD.', q7)
-
-q8 = dados.\
-
-
-salvar('q08', '8. Número de transações envolvendo o Brasil utilizando PairRDD.', q8)
-
-q9 = dados.\
-
-
-salvar('q09', '9. Número de transações envolvendo o Brasil utilizando PairRDD.', q9)
-
-q10 = dados.\
-
-
-salvar('q10', '10. Número de transações envolvendo o Brasil utilizando PairRDD.', q10)
+# q05–q10 atualizadas estão em pjBL2.py
 
 spark.stop()

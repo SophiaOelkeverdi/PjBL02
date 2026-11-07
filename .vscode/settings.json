@@ -1,0 +1,22 @@
+{
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.terminal.executeInFileDir": true,
+  "python.analysis.extraPaths": [
+    "/var/run/host/usr/lib/spark/python",
+    "/usr/lib/spark/python"
+  ],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none"
+  },
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.profiles.linux": {
+    "bash": {
+      "path": "/bin/bash"
+    }
+  },
+  "terminal.integrated.env.linux": {
+    "JAVA_HOME": "/usr/lib/jvm/java-21-openjdk",
+    "SPARK_HOME": "/usr/lib/spark",
+    "PYTHONPATH": "/usr/lib/spark/python:/usr/lib/spark/python/lib/py4j-0.10.9.9-src.zip"
+  }
+}

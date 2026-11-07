@@ -1,0 +1,2 @@
+1. Número de transações envolvendo o Brasil (RDD):
+184748
