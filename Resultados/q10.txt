@@ -1,0 +1,2 @@
+10. Exportação com maior preço por kg (SparkSQL). Ano, país e categoria:
+[Row(ano=1999, pais='Norway', categoria='89_SHIPS_BOATS_AND_OTHER_FLOATING_STRUCTURES', preco_por_kg=292668800.0)]

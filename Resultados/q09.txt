@@ -1,0 +1,2 @@
+9. País com a maior exportação (PairRDD). Chave (country_or_area, flow) e valor (soma de trade_usd):
+(('EU-28', 'Export'), 37135546884367.0)

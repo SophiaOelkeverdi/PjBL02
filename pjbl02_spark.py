@@ -13,17 +13,28 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 os.chdir(ROOT)
 
-os.environ.setdefault("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk")
-os.environ.setdefault("SPARK_HOME", "/usr/lib/spark")
+_linux_java = "/usr/lib/jvm/java-21-openjdk"
+_linux_spark = "/usr/lib/spark"
+_brew_java = "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+if Path(_linux_java).is_dir():
+    os.environ.setdefault("JAVA_HOME", _linux_java)
+elif Path(_brew_java).is_dir():
+    os.environ.setdefault("JAVA_HOME", _brew_java)
+if Path(_linux_spark).is_dir():
+    os.environ.setdefault("SPARK_HOME", _linux_spark)
 os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
-_spark_home = os.environ["SPARK_HOME"]
-sys.path.insert(0, os.path.join(_spark_home, "python"))
-sys.path.insert(0, os.path.join(_spark_home, "python", "lib", "py4j-0.10.9.9-src.zip"))
+_spark_home = os.environ.get("SPARK_HOME", "")
+_py4j = os.path.join(_spark_home, "python", "lib", "py4j-0.10.9.9-src.zip")
+if os.path.isdir(os.path.join(_spark_home, "python")):
+    sys.path.insert(0, os.path.join(_spark_home, "python"))
+if os.path.isfile(_py4j):
+    sys.path.insert(0, _py4j)
 
 from pyspark import StorageLevel
 from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
 
 COLAB = False
 if "google.colab" in sys.modules:
@@ -163,6 +174,78 @@ salvar(
     "q08",
     "8. Preço máximo e mínimo por categoria e por ano (PairRDD):",
     q8,
+)
+
+colunas = [c.strip() for c in cabecalho.split(";")]
+i_pais = colunas.index("country_or_area")
+i_flow = colunas.index("flow")
+i_valor = colunas.index("trade_usd")
+
+# Maior exportação = maior soma de trade_usd com flow Export, lido do cabeçalho.
+q9 = (
+    dados.filter(lambda x: x[i_flow].strip() == "Export")
+    .map(lambda x: ((x[i_pais].strip(), x[i_flow].strip()), float(x[i_valor])))
+    .reduceByKey(lambda a, b: a + b)
+    .reduce(lambda a, b: a if a[1] >= b[1] else b)
+)
+salvar(
+    "q09",
+    "9. País com a maior exportação (PairRDD). Chave (country_or_area, flow) e valor (soma de trade_usd):",
+    q9,
+)
+
+df = spark.createDataFrame(
+    dados,
+    [
+        "country",
+        "year",
+        "commodity_code",
+        "commodity",
+        "flow",
+        "price",
+        "weight",
+        "unit",
+        "amount",
+        "category",
+    ],
+)
+
+def como_numero(coluna, tipo):
+    texto = F.trim(F.col(coluna))
+    valido = texto.rlike(r"^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$")
+    return F.when(valido, texto.cast(tipo))
+
+
+exportacoes = (
+    df.filter(F.upper(F.trim(F.col("flow"))) == F.lit("EXPORT"))
+    .withColumn("year", como_numero("year", "int"))
+    .withColumn("price", como_numero("price", "double"))
+    .withColumn("weight", como_numero("weight", "double"))
+    .filter(
+        F.col("year").isNotNull()
+        & F.col("price").isNotNull()
+        & F.col("weight").isNotNull()
+        & (F.col("weight") > 0)
+    )
+    .withColumn("preco_por_kg", F.col("price") / F.col("weight"))
+)
+
+maior_preco_kg = exportacoes.agg(F.max("preco_por_kg").alias("preco_por_kg"))
+
+q10 = (
+    exportacoes.join(maior_preco_kg, "preco_por_kg")
+    .select(
+        F.col("year").alias("ano"),
+        F.col("country").alias("pais"),
+        F.upper(F.trim(F.col("category"))).alias("categoria"),
+        F.col("preco_por_kg"),
+    )
+    .collect()
+)
+salvar(
+    "q10",
+    "10. Exportação com maior preço por kg (SparkSQL). Ano, país e categoria:",
+    q10,
 )
 
 spark.stop()
