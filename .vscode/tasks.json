@@ -4,7 +4,19 @@
     {
       "label": "Run pjBL2",
       "type": "shell",
-      "command": "\"${workspaceFolder}/run.sh\" pjBL2.py",
+      "command": "${workspaceFolder}/run.sh",
+      "args": ["pjbl02_spark.py"],
+      "windows": {
+        "command": "${workspaceFolder}\\run.cmd",
+        "args": ["pjbl02_spark.py"],
+        "options": {
+          "cwd": "${workspaceFolder}",
+          "shell": {
+            "executable": "cmd.exe",
+            "args": ["/d", "/c"]
+          }
+        }
+      },
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -22,7 +34,19 @@
     {
       "label": "Run current Python file on host",
       "type": "shell",
-      "command": "\"${workspaceFolder}/run.sh\" \"${file}\"",
+      "command": "${workspaceFolder}/run.sh",
+      "args": ["${file}"],
+      "windows": {
+        "command": "${workspaceFolder}\\run.cmd",
+        "args": ["${file}"],
+        "options": {
+          "cwd": "${workspaceFolder}",
+          "shell": {
+            "executable": "cmd.exe",
+            "args": ["/d", "/c"]
+          }
+        }
+      },
       "options": {
         "cwd": "${workspaceFolder}"
       },

@@ -1,36 +1,116 @@
 # -*- coding: utf-8 -*-
 """PJBL2 – Processamento Distribuído com Spark.
 
-Exercícios atualizados (vieram do Colab).
-No VS Code (Flatpak): Ctrl+Shift+B, or Terminal → Run Task → Run pjBL2.
-Do not use the ▶ Play button: it runs Flatpak Python 3.13, which has no Spark/Java.
+Exercícios de análise de transações comerciais com PySpark (RDD, PairRDD e SparkSQL).
+
+Linux: ./run.sh
+macOS: ./run.sh
+Windows: run.cmd
+VS Code: Terminal → Run Task → Run pjBL2
 """
 
 import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 os.chdir(ROOT)
 
-_linux_java = "/usr/lib/jvm/java-21-openjdk"
-_linux_spark = "/usr/lib/spark"
-_brew_java = "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
-if Path(_linux_java).is_dir():
-    os.environ.setdefault("JAVA_HOME", _linux_java)
-elif Path(_brew_java).is_dir():
-    os.environ.setdefault("JAVA_HOME", _brew_java)
-if Path(_linux_spark).is_dir():
-    os.environ.setdefault("SPARK_HOME", _linux_spark)
+
+def _is_jdk(path):
+    home = Path(path)
+    java = home / "bin" / ("java.exe" if sys.platform == "win32" else "java")
+    return java.is_file() and (home / "release").is_file()
+
+
+def _java_homes():
+    """Prefer the JDK this machine already uses, then common install locations."""
+    if sys.platform == "darwin":
+        # Homebrew first, same as before: Apple Silicon, then Intel.
+        yield "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+        yield "/usr/local/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+        yield "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+        yield "/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+        if Path("/usr/libexec/java_home").is_file():
+            try:
+                yield subprocess.check_output(
+                    ["/usr/libexec/java_home"], text=True, stderr=subprocess.DEVNULL
+                ).strip()
+            except (OSError, subprocess.CalledProcessError):
+                pass
+        yield from Path("/Library/Java/JavaVirtualMachines").glob("*.jdk/Contents/Home")
+        return
+
+    if sys.platform == "win32":
+        roots = [
+            os.environ.get("ProgramFiles"),
+            os.environ.get("ProgramFiles(x86)"),
+            os.environ.get("LOCALAPPDATA"),
+        ]
+        patterns = (
+            "Java/jdk-*",
+            "Java/latest",
+            "Eclipse Adoptium/jdk-*",
+            "Microsoft/jdk-*",
+            "Amazon Corretto/jdk*",
+            "Zulu/zulu-*",
+        )
+        for root in roots:
+            if not root:
+                continue
+            base = Path(root)
+            for pattern in patterns:
+                yield from base.glob(pattern)
+        return
+
+    yield "/usr/lib/jvm/java-21-openjdk"
+    jvm = Path("/usr/lib/jvm")
+    if jvm.is_dir():
+        yield from sorted(jvm.glob("java-21*"))
+        yield from sorted(jvm.glob("java-17*"))
+        yield from sorted(p for p in jvm.iterdir() if p.is_dir())
+
+
+java_home = os.environ.get("JAVA_HOME", "")
+if not _is_jdk(java_home):
+    # Drop a stale path (for example a Linux JAVA_HOME copied onto another OS).
+    os.environ.pop("JAVA_HOME", None)
+    for candidate in _java_homes():
+        if _is_jdk(candidate):
+            os.environ["JAVA_HOME"] = str(candidate)
+            break
+    else:
+        java = shutil.which("java")
+        if java:
+            guessed = Path(java).resolve().parent.parent
+            if _is_jdk(guessed):
+                os.environ["JAVA_HOME"] = str(guessed)
+
+if sys.platform == "win32" and _is_jdk(os.environ.get("JAVA_HOME", "")):
+    java_bin = str(Path(os.environ["JAVA_HOME"]) / "bin")
+    os.environ["PATH"] = java_bin + os.pathsep + os.environ.get("PATH", "")
+
+# pip's pyspark locates itself. Only keep a system Spark that is really there.
+spark_home = os.environ.get("SPARK_HOME", "")
+if spark_home and not (Path(spark_home) / "bin").is_dir():
+    os.environ.pop("SPARK_HOME", None)
+    spark_home = ""
+if not spark_home and Path("/usr/lib/spark/bin").is_dir():
+    os.environ["SPARK_HOME"] = "/usr/lib/spark"
+    spark_home = "/usr/lib/spark"
+
 os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
-_spark_home = os.environ.get("SPARK_HOME", "")
-_py4j = os.path.join(_spark_home, "python", "lib", "py4j-0.10.9.9-src.zip")
-if os.path.isdir(os.path.join(_spark_home, "python")):
-    sys.path.insert(0, os.path.join(_spark_home, "python"))
-if os.path.isfile(_py4j):
-    sys.path.insert(0, _py4j)
+if spark_home:
+    spark_python = Path(spark_home) / "python"
+    if spark_python.is_dir():
+        sys.path.insert(0, str(spark_python))
+        for py4j in sorted((spark_python / "lib").glob("py4j-*-src.zip")):
+            sys.path.insert(0, str(py4j))
+            break
 
 from pyspark import StorageLevel
 from pyspark.sql import SparkSession
@@ -66,7 +146,7 @@ os.makedirs(resultados_dir, exist_ok=True)
 def salvar(nome_arquivo, titulo, resultado):
     texto = f"{titulo}\n{resultado}\n"
     print(texto)
-    with open(f"{resultados_dir}/{nome_arquivo}.txt", "w", encoding="utf-8") as arq:
+    with open(Path(resultados_dir) / f"{nome_arquivo}.txt", "w", encoding="utf-8") as arq:
         arq.write(texto)
 
 

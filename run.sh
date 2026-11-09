@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# Run a PySpark script on the host, even when started from Flatpak VS Code.
+# Launch a PySpark script on Linux and macOS, from any terminal or IDE.
+# Inside Flatpak, run on the host so Java and Spark are visible.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-FILE="${1:-pjBL2.py}"
+FILE="${1:-pjbl02_spark.py}"
 if [[ "$FILE" != /* ]]; then
   FILE="$ROOT/$FILE"
 fi
 shift || true
 
-HOST_ENV=(
-  JAVA_HOME=/usr/lib/jvm/java-21-openjdk
-  SPARK_HOME=/usr/lib/spark
-  PYTHONPATH=/usr/lib/spark/python:/usr/lib/spark/python/lib/py4j-0.10.9.9-src.zip
-  PYSPARK_PYTHON=python3
-  PYSPARK_DRIVER_PYTHON=python3
-)
-
 if [[ -f /.flatpak-info ]] && command -v flatpak-spawn >/dev/null; then
-  exec flatpak-spawn --host env "${HOST_ENV[@]}" python3 "$FILE" "$@"
+  exec flatpak-spawn --host python3 "$FILE" "$@"
 fi
 
-export "${HOST_ENV[@]}"
-exec python3 "$FILE" "$@"
+if [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PYTHON="$ROOT/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON="$(command -v python3)"
+else
+  PYTHON="$(command -v python)"
+fi
+
+exec "$PYTHON" "$FILE" "$@"

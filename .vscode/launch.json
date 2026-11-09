@@ -19,7 +19,7 @@
       "name": "PySpark: pjBL2",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/pjBL2.py",
+      "program": "${workspaceFolder}/pjbl02_spark.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "justMyCode": true,
